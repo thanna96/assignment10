@@ -114,9 +114,10 @@ def setup_test_database(request):
     """
     logger.info("Setting up test database...")
 
-    # Drop all tables to ensure a clean slate
-    Base.metadata.drop_all(bind=test_engine)
-    logger.info("Dropped all existing tables.")
+      # Drop all tables using the model metadata to ensure a clean slate
+    # Using drop_db() guarantees we drop tables created from the ORM models
+    drop_db()
+    logger.info("Dropped all existing tables via drop_db().")
 
     # Create all tables
     Base.metadata.create_all(bind=test_engine)
