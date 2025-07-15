@@ -31,7 +31,16 @@ class User(Base):
     last_name = Column(String(50), nullable=False)
     email = Column(String(120), unique=True, nullable=False)
     username = Column(String(50), unique=True, nullable=False)
-    password = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=False)
+
+    # Provide backward compatibility for using `password` in constructors
+    @property
+    def password(self) -> str:
+        return self.password_hash
+
+    @password.setter
+    def password(self, value: str) -> None:
+        self.password_hash = value
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
     last_login = Column(DateTime, nullable=True)
@@ -45,10 +54,14 @@ class User(Base):
     def hash_password(password: str) -> str:
         """Hash a password using bcrypt."""
         return pwd_context.hash(password)
+    
+    def set_password(self, raw_password: str) -> None:
+        """Hash and store a new password."""
+        self.password_hash = self.hash_password(raw_password)
 
     def verify_password(self, plain_password: str) -> bool:
-        """Verify a plain password against the hashed password."""
-        return pwd_context.verify(plain_password, self.password)
+        """Verify a plain password against the stored password hash."""
+        return pwd_context.verify(plain_password, self.password_hash)
 
     @staticmethod
     def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -91,11 +104,11 @@ class User(Base):
             
             # Create new user instance
             new_user = cls(
-                first_name=user_create.first_name,
-                last_name=user_create.last_name,
+                first_name=user_data.get("first_name", ""),
+                last_name=user_data.get("last_name", ""),
                 email=user_create.email,
                 username=user_create.username,
-                password=cls.hash_password(user_create.password),
+                password_hash=cls.hash_password(user_create.password),
                 is_active=True,
                 is_verified=False
             )

@@ -3,6 +3,22 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, ConfigDict
 
+class UserCreate(BaseModel):
+    """Schema for creating a new user."""
+    username: str
+    email: EmailStr
+    password: str
+
+
+class UserRead(BaseModel):
+    """Schema for reading user details without the password hash."""
+    id: UUID
+    username: str
+    email: EmailStr
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+    
 class UserResponse(BaseModel):
     """Schema for user response data"""
     id: UUID
